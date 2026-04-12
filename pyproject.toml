@@ -1,0 +1,21 @@
+[project]
+name = "joust"
+version = "0.1.0"
+description = "joust is a tournament simulator focused on swiss systems"
+authors = [
+    {name = "langhda"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.11"
+packages = [
+    { include = "src/joust" }
+]
+dependencies = [
+    "numpy (>=2.4.3,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
