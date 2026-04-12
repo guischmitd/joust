@@ -1,9 +1,9 @@
-from dataclasses import dataclass
+import random
 from abc import ABC, abstractmethod
-
-import numpy as np
+from dataclasses import dataclass
 
 from joust.dto import Match, Team
+
 
 @dataclass
 class MatchPrediction:
@@ -13,31 +13,26 @@ class MatchPrediction:
     probability: float
 
     @property
-    def odds(self):
+    def odds(self) -> float:
         p = self.probability
         return p / (1 - p)
-    
-    @property
-    def min_acceptable_odds(self, margin: float = 0.1):
+
+    def min_acceptable_odds(self, margin: float = 0.1) -> dict[Team, float]:
         return {
             self.winner: 1 / self.probability * (1 + margin),
-            self.loser: 1 / (1 - self.probability) * (1 + margin)
+            self.loser: 1 / (1 - self.probability) * (1 + margin),
         }
 
-class MatchPredictor(ABC):
-    def __init__(self) -> None:
-        pass
 
+class MatchPredictor(ABC):
     @abstractmethod
     def predict_winner(self, match: Match) -> MatchPrediction:
         pass
 
+
 class RandomMatchPredictor(MatchPredictor):
     def predict_winner(self, match: Match) -> MatchPrediction:
-        winner, loser = np.random.shuffle([match.left, match.right])
-        return MatchPrediction(
-            match=match,
-            winner=winner,
-            loser=loser,
-            probability=0.5
-        )
+        pair = [match.left, match.right]
+        random.shuffle(pair)
+        winner, loser = pair
+        return MatchPrediction(match=match, winner=winner, loser=loser, probability=0.5)

@@ -1,60 +1,62 @@
 from abc import ABC, abstractmethod
-from joust.dto import Team, Match
-from joust.predictor import MatchPredictor
+
+from joust.dto import Match, Team
+from joust.predictor import MatchPrediction, MatchPredictor
+from joust.seeding import recalculate_seeds
+
 
 class MatchupStrategy(ABC):
-    """
-    Base class for the strategy used for matching teams of a single swiss group.
-    Strategies can be composed for each round to create custom swiss matchup logic
-    """
-    def __init__(self) -> None:
-        pass
+    """Base class for matching teams in a round."""
 
     @abstractmethod
     def get_matchups(self, teams: list[Team], history: list[Match]) -> list[Match]:
         raise NotImplementedError()
 
+
 class PureSeedMatchup(MatchupStrategy):
-    def __init__(self) -> None:
-        super().__init__()
-
     def get_matchups(self, teams: list[Team], history: list[Match]) -> list[Match]:
-        assert len(teams) > 0 and len(teams) % 2 == 0, ValueError(f"Number of teams must be even and greater than 0. Received: {len(teams)}")
+        assert len(teams) > 0 and len(teams) % 2 == 0, f"Need even >0 teams, got {len(teams)}"
+        ordered = sorted(teams, key=lambda t: t.seed)
+        half = len(ordered) // 2
+        return [Match(a, b) for a, b in zip(ordered[:half], reversed(ordered[half:]))]
 
-        sorted_teams = sorted(teams, key=lambda x: x.seed)[::-1]
-        half_length = len(sorted_teams) // 2
-        matches = [
-            Match(a, b)
-            for a, b in zip(sorted_teams[:half_length], sorted_teams[-1:-half_length-1:-1])
-        ]
-
-        return matches
 
 class Tournament:
-    def __init__(self,
-                 teams: list[Team],
-                 round_strategies: list[MatchupStrategy],
-                 match_predictor: MatchPredictor) -> None:
+    def __init__(
+        self,
+        teams: list[Team],
+        round_strategies: list[MatchupStrategy],
+        match_predictor: MatchPredictor,
+    ) -> None:
         self.teams = teams
         self.round_strategies = round_strategies
         self.match_predictor = match_predictor
         self.current_round = 0
+        self.match_history: list[Match] = []
 
-        self._match_history = []
+    @property
+    def active_teams(self) -> list[Team]:
+        return [t for t in self.teams if t.wins < 3 and t.losses < 3]
 
-    def tick(self):
-        matches = self._generate_matches()
-        predictions = self._predict_matches(matches)
+    @property
+    def advanced(self) -> list[Team]:
+        return [t for t in self.teams if t.wins >= 3]
 
+    @property
+    def eliminated(self) -> list[Team]:
+        return [t for t in self.teams if t.losses >= 3]
 
-    def _predict_matches(self, matches: list[Match]):
-        return [
-            self.match_predictor.predict_winner(match)
-            for match in matches
-        ]
+    def tick(self) -> list[MatchPrediction]:
+        strategy = self.round_strategies[self.current_round]
+        matches = strategy.get_matchups(self.active_teams, self.match_history)
+        predictions = [self.match_predictor.predict_winner(m) for m in matches]
 
-    def _generate_matches(self):
-        this_round = self.round_strategies[self.current_round]
-        matchups = this_round.get_matchups(self.teams, self._match_history)
+        for pred in predictions:
+            pred.match.left_wins = pred.winner is pred.match.left
+            pred.winner.wins += 1
+            pred.loser.losses += 1
+            self.match_history.append(pred.match)
+
         self.current_round += 1
-        return matchups
+        recalculate_seeds(self.teams, self.match_history)
+        return predictions

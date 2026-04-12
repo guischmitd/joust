@@ -19,3 +19,23 @@ dependencies = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "pytest (>=9.0.3,<10.0.0)",
+    "pre-commit (>=4.5.1,<5.0.0)",
+    "ruff (>=0.15.10,<0.16.0)"
+]
+
+[tool.ruff]
+src = ["src"]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["joust"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
