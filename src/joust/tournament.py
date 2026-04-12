@@ -31,13 +31,30 @@ class PureSeedMatchup(MatchupStrategy):
         return matches
 
 class Tournament:
-    def __init__(self, teams: list[Team], round_strategies: list[MatchupStrategy], match_predictor: MatchPredictor) -> None:
+    def __init__(self,
+                 teams: list[Team],
+                 round_strategies: list[MatchupStrategy],
+                 match_predictor: MatchPredictor) -> None:
         self.teams = teams
+        self.round_strategies = round_strategies
+        self.match_predictor = match_predictor
+        self.current_round = 0
+
+        self._match_history = []
 
     def tick(self):
         matches = self._generate_matches()
-        
-        winners, losers = self._predict_matches(matches)
+        predictions = self._predict_matches(matches)
+
+
+    def _predict_matches(self, matches: list[Match]):
+        return [
+            self.match_predictor.predict_winner(match)
+            for match in matches
+        ]
 
     def _generate_matches(self):
-        pass
+        this_round = self.round_strategies[self.current_round]
+        matchups = this_round.get_matchups(self.teams, self._match_history)
+        self.current_round += 1
+        return matchups
