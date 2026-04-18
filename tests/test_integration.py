@@ -52,7 +52,7 @@ def test_min_acceptable_odds_is_callable():
     a, b = Team("A", 1), Team("B", 2)
     pred = MatchPrediction(Match(a, b), winner=a, loser=b, probability=0.6)
     odds = pred.min_acceptable_odds(margin=0.05)
-    assert a in odds and b in odds
+    assert "left" in odds and "right" in odds
 
 
 # --- seeding ---

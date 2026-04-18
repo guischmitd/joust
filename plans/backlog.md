@@ -29,7 +29,7 @@ Priority table (1-indexed by seed within the pool):
 ```
 > TODO: transcribe the full 15-row table from the rulebook exactly.
 
-**All rounds:** Set `best_of=3` for elimination matches (pool 0-2 or 2-0) and advancement matches (pool 2-0 or 0-2). Set `best_of=1` otherwise.
+**All rounds:** Set `best_of=3` for elimination matches (pool X-2 or 2-X) and advancement matches (pool 2-X or X-2). Set `best_of=1` otherwise.
 
 **Rematch avoidance:** Check `history` for prior matchups between the same two teams.
 

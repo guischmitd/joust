@@ -18,10 +18,16 @@ class MatchPrediction:
         return p / (1 - p)
 
     def min_acceptable_odds(self, margin: float = 0.1) -> dict[Team, float]:
+        winner_odds = 1 / self.probability * (1 + margin)
+        loser_odds = 1 / (1 - self.probability) * (1 + margin)
         return {
-            self.winner: 1 / self.probability * (1 + margin),
-            self.loser: 1 / (1 - self.probability) * (1 + margin),
+            "left" if self.left_wins else "right": winner_odds,
+            "right" if self.left_wins else "left": loser_odds,
         }
+
+    @property
+    def left_wins(self):
+        return self.winner is self.match.left
 
 
 class MatchPredictor(ABC):

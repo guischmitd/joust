@@ -10,8 +10,8 @@ class Team:
     losses: int = 0
 
     def __post_init__(self):
-        if self.initial_seed == 0:
-            self.initial_seed = self.seed
+        # Store the team's initial seed on instantiation
+        self.initial_seed = self.seed
 
 
 @dataclass
