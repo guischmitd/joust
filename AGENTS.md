@@ -141,6 +141,10 @@ Key concepts:
 
 7. **External orchestration between stages**: No "Major" class. A script creates each stage's Tournament, runs it, extracts advancers, reseeds, and creates the next stage.
 
+## Must follow
+- When reading python notebooks, check if the cli command `nbread` exists, if so, use it to get only the source and save tokens
+    - If you need to read outputs, run a script to read only those fields in the notebook json, ignore ipynb specific metadata
+
 ## Backlog
 
 See `plans/backlog.md` for upcoming work: `Tournament.run()`, `SwissMatchupStrategy`, `SingleEliminationStrategy`, and the external orchestrator script.

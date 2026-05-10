@@ -12,7 +12,12 @@ packages = [
     { include = "src/joust" }
 ]
 dependencies = [
-    "numpy (>=2.4.3,<3.0.0)"
+    "numpy (>=2.4.3,<3.0.0)",
+    "pandas (>=3.0.2,<4.0.0)",
+    "pyarrow (>=24.0.0,<25.0.0)",
+    "scikit-learn (>=1.8.0,<2.0.0)",
+    "tqdm (>=4.67.3,<5.0.0)",
+    "lightgbm (>=4.6.0,<5.0.0)"
 ]
 
 
@@ -24,15 +29,27 @@ build-backend = "poetry.core.masonry.api"
 dev = [
     "pytest (>=9.0.3,<10.0.0)",
     "pre-commit (>=4.5.1,<5.0.0)",
-    "ruff (>=0.15.10,<0.16.0)"
+    "ruff (>=0.15.10,<0.16.0)",
+    "ipykernel (>=7.2.0,<8.0.0)",
+    "matplotlib (>=3.10.9,<4.0.0)",
+    "tabulate (>=0.10.0,<0.11.0)",
+    "ipywidgets (>=8.1.8,<9.0.0)"
 ]
 
 [tool.ruff]
-src = ["src"]
-line-length = 100
+line-length = 120 # Default is 88
+target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+# Select core rules (Pyflakes, Pycodestyle, isort, upgrade)
+select = ["E", "F", "I", "UP", "C90", "RUF"]
+# Ignore: Missing docstrings (D), too many arguments (PLR0913),
+# overly eager import sorting in specific scenarios
+ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "PLR0913"]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore safety checks in tests
+"test_*.py" = ["S101"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["joust"]

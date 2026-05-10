@@ -1,3 +1,12 @@
+
+
+# Data and ipynbs
+data/
+**.ipynb
+
+# MacOS
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
