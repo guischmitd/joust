@@ -1,24 +1,32 @@
+import random
 from abc import ABC, abstractmethod
+from typing import Literal
 
-from joust.dto import Contestant, Match
+from joust.dto import Contestant, Match, Team
 from joust.predictor import MatchPrediction, MatchPredictor, RandomMatchPredictor
+
+Registry = dict[Team, Contestant]
 
 
 class MatchupStrategy(ABC):
     """Base class for matching teams in a round."""
 
     @abstractmethod
-    def get_matchups(self, contestants: list[Contestant], match_history: list[Match]) -> list[Match]:
+    def get_matchups(
+        self, contestants: list[Contestant], match_history: list[Match], registry: Registry
+    ) -> list[Match]:
         raise NotImplementedError()
 
-    def update_seeds(self, contestants: list[Contestant], match_history: list[Match]) -> None:
+    def update_seeds(self, contestants: list[Contestant], match_history: list[Match], registry: Registry) -> None:
         pass
 
 
 class PureSeedMatchup(MatchupStrategy):
     """Common matchup strategy for bracket style play (playoffs)"""
 
-    def get_matchups(self, contestants: list[Contestant], match_history: list[Match]) -> list[Match]:
+    def get_matchups(
+        self, contestants: list[Contestant], match_history: list[Match], registry: Registry
+    ) -> list[Match]:
         assert len(contestants) > 0 and len(contestants) % 2 == 0, f"Need even >0 contestants, got {len(contestants)}"
         ordered = sorted(contestants, key=lambda c: c.seed)
         half = len(ordered) // 2
@@ -33,12 +41,15 @@ class Tournament:
         match_predictor: MatchPredictor | None = None,
         wins_to_advance: int = 3,
         losses_to_drop: int = 3,
+        prediction_mode: Literal["sampled", "exact"] = "exact",
     ) -> None:
         self.contestants = contestants
+        self.registry: Registry = {c.team: c for c in contestants}
         self.round_strategies = round_strategies
         self.match_predictor = match_predictor or RandomMatchPredictor()
         self.current_round = 0
         self.match_history: list[Match] = []
+        self.prediction_mode = prediction_mode
 
         assert wins_to_advance > 0, f"wins_to_advance must be strictly positive (received {wins_to_advance})"
         assert losses_to_drop > 0, f"losses_to_drop must be strictly positive (received {losses_to_drop})"
@@ -58,17 +69,25 @@ class Tournament:
     def eliminated(self) -> list[Contestant]:
         return [c for c in self.contestants if c.losses >= self.losses_to_drop]
 
+    def _match_outcome_from_pred(self, pred: MatchPrediction) -> bool:
+        if self.prediction_mode == "exact":
+            return pred.left_wins
+        elif self.prediction_mode == "sampled":
+            roll = random.random()
+            return roll < pred.probability
+        else:
+            raise ValueError(f"Invalid prediction_mode {self.prediction_mode}")
+
     def tick(self) -> list[MatchPrediction]:
         strategy = self.round_strategies[self.current_round]
-        strategy.update_seeds(self.contestants, self.match_history)
-        matches = strategy.get_matchups(self.active_contestants, self.match_history)
+        strategy.update_seeds(self.contestants, self.match_history, self.registry)
+        matches = strategy.get_matchups(self.active_contestants, self.match_history, self.registry)
         predictions = [self.match_predictor.predict_winner(m) for m in matches]
 
-        team_to_contestant = {c.team: c for c in self.contestants}
         for pred in predictions:
-            pred.match.left_wins = pred.left_wins
-            team_to_contestant[pred.winner].wins += 1
-            team_to_contestant[pred.loser].losses += 1
+            pred.match.left_wins = self._match_outcome_from_pred(pred)
+            self.registry[pred.match.winner].wins += 1
+            self.registry[pred.match.loser].losses += 1
             self.match_history.append(pred.match)
 
         self.current_round += 1

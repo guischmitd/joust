@@ -3,17 +3,9 @@ import hashlib
 from dataclasses import dataclass
 
 
-@dataclass(unsafe_hash=True)
+@dataclass(frozen=True)
 class Team:
     name: str
-
-    def __eq__(self, other):
-        if isinstance(other, Team):
-            return self.name == other.name
-        elif isinstance(other, str):
-            return self.name == other
-        else:
-            raise ValueError(f"Cannot compare Team with object of type {type(other)}")
 
 
 @dataclass(unsafe_hash=True)
@@ -98,8 +90,7 @@ class Match:
 @dataclass
 class MatchPrediction:
     match: Match
-    winner: Team
-    loser: Team
+    left_wins: bool
     probability: float
 
     @property
@@ -121,8 +112,12 @@ class MatchPrediction:
         }
 
     @property
-    def left_wins(self):
-        return self.winner is self.match.left
+    def predicted_winner(self):
+        return self.match.left if self.left_wins else self.match.right
+
+    @property
+    def predicted_loser(self):
+        return self.match.right if self.left_wins else self.match.left
 
     def to_dict(self):
         d = self.match.to_dict()

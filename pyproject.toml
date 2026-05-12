@@ -45,7 +45,7 @@ target-version = "py311"
 select = ["E", "F", "I", "UP", "C90", "RUF"]
 # Ignore: Missing docstrings (D), too many arguments (PLR0913),
 # overly eager import sorting in specific scenarios
-ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "PLR0913"]
+ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "PLR0913", "RUF007"]
 
 [tool.ruff.lint.per-file-ignores]
 # Ignore safety checks in tests

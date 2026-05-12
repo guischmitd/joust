@@ -25,7 +25,8 @@ def test_round3_no_history():
     s = ValveBuchholzMatchup(3)
     expected = [Match(t[0].team, t[-1].team), Match(t[1].team, t[-2].team)]
 
-    matchups = s.get_matchups(t, previous_matches)
+    registry = {c.team: c for c in t}
+    matchups = s.get_matchups(t, previous_matches, registry)
     assert compare_matchups(matchups, expected)
 
 
@@ -40,7 +41,8 @@ def test_round3_one_rematch():
     previous_matches = [Match(t[0].team, t[-1].team)]
     expected = [Match(t[0].team, t[2].team), Match(t[1].team, t[3].team)]
     s = ValveBuchholzMatchup(3)
-    matchups = s.get_matchups(t, previous_matches)
+    registry = {c.team: c for c in t}
+    matchups = s.get_matchups(t, previous_matches, registry)
     assert compare_matchups(matchups, expected)
 
 
@@ -73,5 +75,6 @@ def test_round3_backtrack():
     ]
 
     s = ValveBuchholzMatchup(3)
-    matchups = s.get_matchups(t, previous_matches)
+    registry = {c.team: c for c in t}
+    matchups = s.get_matchups(t, previous_matches, registry)
     assert compare_matchups(matchups, expected)
