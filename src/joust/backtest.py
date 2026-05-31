@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from joust.dto import Match
 from joust.features import process
-from joust.features.base import FeatureSet
+from joust.features import FeatureSet
 from joust.predictor import MatchPredictor
 from joust.utils import dataframe_from_matches
 
@@ -50,7 +50,7 @@ def binary_brier_score_loss(y_true, y_prob):
 DEFAULT_METRICS = [expected_calibration_error, binary_brier_score_loss, binary_log_loss, roc_auc_score, row_count]
 
 
-def evaluate(matches, probs, metrics=DEFAULT_METRICS, report=True, name="evaluation"):
+def evaluate(matches: pd.DataFrame, probs: np.ndarray, metrics=DEFAULT_METRICS, report=True, name="evaluation"):
     if report:
         print(classification_report(matches["left_wins"], probs.round()))
 
@@ -134,3 +134,9 @@ class Backtest:
                 axis=1,
             )
             self.history_df = self.history_df.join(feats)
+
+    def _evaluate_default_metrics(self, matches, probs, name='evaluation'):
+        return evaluate(matches, probs, report=False, name=name)
+    
+    def _evaluate_upset_metrics(self):
+        pass

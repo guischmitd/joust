@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from joust.dto import Match
 from joust.features import process
-from joust.features.base import FeatureSet
+from joust.features import FeatureSet
 from joust.predictor import MatchPredictor, RandomMatchPredictor
 from joust.tournament import Tournament
 from joust.utils import dataframe_from_matches

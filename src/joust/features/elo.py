@@ -2,7 +2,7 @@ from collections import defaultdict
 
 import pandas as pd
 
-from joust.features.base import FeatureSet
+from joust.features import FeatureSet
 
 
 def elo_expected_score(left_elo, right_elo):

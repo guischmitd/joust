@@ -3,54 +3,48 @@ name = "joust"
 version = "0.1.0"
 description = "joust is a tournament simulator focused on swiss systems"
 authors = [
-    {name = "langhda"}
+    { name = "langhda" }
 ]
-license = {text = "MIT"}
+license = { text = "MIT" }
 readme = "README.md"
+
 requires-python = ">=3.11,<3.14"
-packages = [
-    { include = "src/joust" }
-]
+
 dependencies = [
-    "numpy (>=2.4.3,<3.0.0)",
-    "pandas (>=3.0.2,<4.0.0)",
-    "pyarrow (>=24.0.0,<25.0.0)",
-    "scikit-learn (>=1.8.0,<2.0.0)",
-    "tqdm (>=4.67.3,<5.0.0)",
-    "lightgbm (>=4.6.0,<5.0.0)",
-    "camoufox (>=0.4.11,<0.5.0)",
-    "html5lib (>=1.1,<2.0)"
+    "numpy>=2.4.3,<3.0.0",
+    "pandas>=3.0.2,<4.0.0",
+    "pyarrow>=24.0.0,<25.0.0",
+    "scikit-learn>=1.8.0,<2.0.0",
+    "tqdm>=4.67.3,<5.0.0",
+    "lightgbm>=4.6.0,<5.0.0",
+    "camoufox>=0.4.11,<0.5.0",
+    "html5lib>=1.1,<2.0",
+    "duckdb>=1.5.3,<2.0.0",
+    "torch>=2.12.0,<3.0.0",
+    "ipykernel>=7.2.0",
+    "matplotlib>=3.10.9",
 ]
 
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
-    "pytest (>=9.0.3,<10.0.0)",
-    "pre-commit (>=4.5.1,<5.0.0)",
-    "ruff (>=0.15.10,<0.16.0)",
-    "ipykernel (>=7.2.0,<8.0.0)",
-    "matplotlib (>=3.10.9,<4.0.0)",
-    "tabulate (>=0.10.0,<0.11.0)",
-    "ipywidgets (>=8.1.8,<9.0.0)"
+    "pytest>=9.0.3,<10.0.0",
+    "pre-commit>=4.5.1,<5.0.0",
+    "ruff>=0.15.10,<0.16.0",
+    "ipykernel>=7.2.0,<8.0.0",
+    "matplotlib>=3.10.9,<4.0.0",
+    "tabulate>=0.10.0,<0.11.0",
+    "ipywidgets>=8.1.8,<9.0.0"
 ]
 
 [tool.ruff]
-line-length = 120 # Default is 88
+line-length = 120
 target-version = "py311"
 
 [tool.ruff.lint]
-# Select core rules (Pyflakes, Pycodestyle, isort, upgrade)
 select = ["E", "F", "I", "UP", "C90", "RUF"]
-# Ignore: Missing docstrings (D), too many arguments (PLR0913),
-# overly eager import sorting in specific scenarios
 ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "PLR0913", "RUF007"]
 
 [tool.ruff.lint.per-file-ignores]
-# Ignore safety checks in tests
 "test_*.py" = ["S101"]
 
 [tool.ruff.lint.isort]
@@ -58,3 +52,6 @@ known-first-party = ["joust"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.uv]
+package = true
