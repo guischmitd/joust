@@ -25,6 +25,15 @@ class MatchPredictor(ABC):
     def _prediction_from_prob(self, match, prob):
         return MatchPrediction(match, round(prob), prob)
 
+    @property
+    def updateable(self) -> bool:
+        """Dynamically checks if the subclass has overridden the update method."""
+        return type(self).update is not MatchPredictor.update
+
+    def update(self, history: list[Match] | pd.DataFrame):
+        """Optional method. Subclasses can override this to support incremental updates."""
+        raise NotImplementedError(f"Predictor {self.__class__.__name__} does not support incremental updates.")
+
 
 class RandomMatchPredictor(MatchPredictor):
     def fit(self, history: list[Match] | pd.DataFrame):
@@ -67,22 +76,30 @@ class OracleMatchPredictor(MatchPredictor):
 class EloPredictor(MatchPredictor):
     def __init__(self, k=32) -> None:
         self.k = k
-        self.elos = defaultdict(lambda: 1500)
+        self.ratings = defaultdict(lambda: 1500)
+
+    def _update_ratings(self, batch: list[Match]):
+        for m in batch:
+            left, right, left_wins = m.left, m.right, float(m.left_wins)
+            scores = {left: left_wins, right: 1.0 - left_wins}
+            left_prob = elo_expected_score(self.ratings[left], self.ratings[right])
+            expected = {left: left_prob, right: 1.0 - left_prob}
+            for team in (left, right):
+                self.ratings[team] += self.k * (scores[team] - expected[team])
 
     def fit(self, history: list[Match] | pd.DataFrame):
         if isinstance(history, pd.DataFrame):
             history = matches_from_dataframe(history)
 
-        for m in history:
-            left, right, left_wins = m.left, m.right, float(m.left_wins)
-            scores = {left: left_wins, right: 1.0 - left_wins}
-            left_prob = elo_expected_score(self.elos[left], self.elos[right])
-            expected = {left: left_prob, right: 1.0 - left_prob}
-            for team in (left, right):
-                self.elos[team] += self.k * (scores[team] - expected[team])
+        self._update_ratings(history)
 
     def predict_winner(self, match: Match) -> MatchPrediction:
-        return self._prediction_from_prob(match, elo_expected_score(self.elos[match.left], self.elos[match.right]))
+        return self._prediction_from_prob(
+            match, elo_expected_score(self.ratings[match.left], self.ratings[match.right])
+        )
+
+    def update(self, new_matches: list[Match]):
+        self._update_ratings(new_matches)
 
 
 class GlickoPredictor(MatchPredictor):
@@ -149,12 +166,22 @@ class GlickoPredictor(MatchPredictor):
         if isinstance(history, list):
             history = dataframe_from_matches(history)
 
-        dates = pd.date_range(history["date"].min(), history["date"].max(), freq=self.freq, inclusive="both")
+        dates = list(pd.date_range(history["date"].min(), history["date"].max(), freq=self.freq, inclusive="both"))
+
+        if dates[0] >= history["date"].min():
+            dates = [pd.to_datetime("1984-01-01"), *dates]
+
+        if dates[-1] < history["date"].max():
+            dates.append(pd.to_datetime("2222-02-02"))
+
         for start_date, end_date in zip(dates[:-1], dates[1:]):
             batch = matches_from_dataframe(
-                history[history["date"].dt.date.between(start_date.date(), end_date.date(), inclusive="both")]
+                history[history["date"].dt.date.between(start_date.date(), end_date.date(), inclusive="right")]
             )
             self._update_ratings(batch)
+
+    def update(self, new_matches: list[Match]):
+        self._update_ratings(new_matches)
 
     def predict_winner(self, match: Match) -> MatchPrediction:
         left_rating = self.ratings[match.left]
